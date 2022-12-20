@@ -2042,56 +2042,92 @@ function () {
 
     this.btnBlock = document.createElement('div');
     this.colorPicker = document.createElement('input');
+    this.clear = document.createElement('div');
+    this.scale = localStorage.getItem('scale') || 1;
+    this.color = localStorage.getItem('color') || '#ffffff';
     this.btnBlock.addEventListener('click', function (e) {
       return _this.onScaleChange(e);
     });
     this.colorPicker.addEventListener('input', function (e) {
       return _this.onColorChange(e);
     });
+    this.clear.addEventListener('click', function () {
+      return _this.reset();
+    });
   }
 
   _createClass(Customizator, [{
     key: "onScaleChange",
     value: function onScaleChange(e) {
-      var scale;
+      var _this2 = this;
+
       var body = document.querySelector('body');
 
-      if (e.target.value) {
-        scale = +e.target.value.replace(/x/g, "");
+      if (e) {
+        this.scale = +e.target.value.replace(/x/g, "");
       }
 
-      function recursy(element) {
+      var recursy = function recursy(element) {
         element.childNodes.forEach(function (node) {
           if (node.nodeName === '#text' && node.nodeValue.replace(/\s/g, "").length > 0) {
             if (!node.parentNode.getAttribute('data-fz')) {
               var value = window.getComputedStyle(node.parentNode, null).fontSize;
               node.parentNode.setAttribute('data-fz', +value.replace(/px/g, ""));
-              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * scale + "px";
+              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * _this2.scale + "px";
             } else {
-              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * scale + "px";
+              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * _this2.scale + "px";
             }
           } else {
             recursy(node);
           }
         });
-      }
+      };
 
       recursy(body);
+      localStorage.setItem('scale', this.scale);
     }
   }, {
     key: "onColorChange",
     value: function onColorChange(e) {
       var body = document.querySelector('body');
       body.style.backgroundColor = e.target.value;
-      console.log(e.target.value);
+      localStorage.setItem('color', e.target.value);
+    }
+  }, {
+    key: "setBgColor",
+    value: function setBgColor() {
+      var body = document.querySelector('body');
+      body.style.backgroundColor = this.color;
+      this.colorPicker.value = this.color;
+    }
+  }, {
+    key: "injectStyle",
+    value: function injectStyle() {
+      var style = document.createElement('style');
+      style.innerHTML = "\n\t\t\t.panel {\n\t\t\t    display: flex;\n\t\t\t    justify-content: space-around;\n\t\t\t    align-items: center;\n\t\t\t    position: fixed;\n\t\t\t    top: 10px;\n\t\t\t    right: 0;\n\t\t\t    border: 1px solid rgba(0,0,0, .2);\n\t\t\t    box-shadow: 0 0 20px rgba(0,0,0, .5);\n\t\t\t    width: 300px;\n\t\t\t    height: 60px;\n\t\t\t    background-color: #fff;\n\n\t\t\t}\n\n\t\t\t.scale {\n\t\t\t    display: flex;\n\t\t\t    justify-content: space-around;\n\t\t\t    align-items: center;\n\t\t\t    width: 100px;\n\t\t\t    height: 40px;\n\t\t\t}\n\n\t\t\t.scale_btn {\n\t\t        display: block;\n\t\t        width: 40px;\n\t\t        height: 40px;\n\t\t        border: 1px solid rgba(0,0,0, .2);\n\t\t        border-radius: 4px;\n\t\t        font-size: 18px;\n\t\t\t}\n\n\t\t\t.color {\n\t\t\t    width: 40px;\n\t\t\t    height: 40px;\n\t\t\t}\n\n\t\t\t.clear {\n\t\t\t\tfont-size: 20px;\n\t\t\t\tcursor: pointer;\n\t\t\t}\n\t\t";
+      document.querySelector('head').appendChild(style);
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      localStorage.clear();
+      this.scale = 1;
+      this.color = '#ffffff';
+      this.setBgColor();
+      this.onScaleChange();
     }
   }, {
     key: "render",
     value: function render() {
+      this.injectStyle();
+      this.setBgColor();
+      this.onScaleChange();
       var scaleInputS = document.createElement('input'),
           scaleInputM = document.createElement('input'),
           panel = document.createElement('div');
-      panel.append(this.btnBlock, this.colorPicker);
+      panel.append(this.btnBlock, this.colorPicker, this.clear);
+      this.clear.innerHTML = '&times;';
+      this.clear.classList.add('clear');
       scaleInputS.classList.add('scale_btn');
       scaleInputM.classList.add('scale_btn');
       this.btnBlock.classList.add('scale');
